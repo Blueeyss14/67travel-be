@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserAuthController;
+use App\Http\Controllers\Message\MessageController;
+
 
 use Illuminate\Support\Facades\Route;
 
@@ -24,3 +26,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/update/{id}', [UserAuthController::class, 'update']);
     Route::delete('/user/delete/{id}', [UserAuthController::class, 'delete']);
 });
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/message/send', [MessageController::class, 'send']);
+    Route::get('/message/user/{id}', [MessageController::class, 'getByUser']);
+});
+
