@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserAuthController;
 use App\Http\Controllers\Message\MessageController;
+use App\Http\Controllers\Api\DestinationController;
 
 
 use Illuminate\Support\Facades\Route;
@@ -33,3 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/message/user/{id}', [MessageController::class, 'getByUser']);
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/destinations', [DestinationController::class, 'index']);
+    Route::get('/destinations/{id}', [DestinationController::class, 'show']);
+    Route::post('/destinations', [DestinationController::class, 'store']);
+    Route::put('/destinations/{id}', [DestinationController::class, 'update']);
+    Route::delete('/destinations/{id}', [DestinationController::class, 'destroy']);
+});
