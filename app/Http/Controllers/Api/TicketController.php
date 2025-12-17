@@ -84,39 +84,74 @@ class TicketController extends Controller
 
         return response()->json([
             'ticket_code' => $ticket->ticket_code,
-            'nama' => $user->nama,
-            'kendaraan' => $vehicle?->name,
-            'pengunjung' => $guestCount,
-            'waktu' => $ticket->expired_at,
-            'akomodasi' => $accommodation?->name,
-            'price' => $total,
-            'rincian' => $breakdown
+            'destination_name' => $destination?->name,
+            'vehicle_name' => $vehicle?->name,
+            'accommodation_name' => $accommodation?->name,
+            'location' => $destination
+                ? [
+                    'latitude' => $destination->latitude,
+                    'longitude' => $destination->longitude,
+                ]
+                : null,
+            'expired_at' => $ticket->expired_at,
+            'guest_count' => $guestCount,
+            'total_price' => $total,
+            'price_breakdown' => $breakdown
         ], 201);
     }
 
     public function index()
     {
-        return Ticket::where('user_id', auth()->id())->get();
+        return Ticket::with(['destination', 'vehicle', 'accommodation'])
+            ->where('user_id', auth()->id())
+            ->get()
+            ->map(function ($ticket) {
+                return [
+                    'ticket_code' => $ticket->ticket_code,
+                    'destination_name' => $ticket->destination?->name,
+                    'vehicle_name' => $ticket->vehicle?->name,
+                    'accommodation_name' => $ticket->accommodation?->name,
+                    'location' => $ticket->destination?->location,
+                    'expired_at' => $ticket->expired_at,
+                    'guest_count' => $ticket->guest_count,
+                    'total_price' => $ticket->total_price,
+                    'price_breakdown' => $ticket->price_breakdown,
+                    'created_at' => $ticket->created_at
+                ];
+            });
     }
 
     public function show($id)
     {
-        return Ticket::where('id', $id)
+        $ticket = Ticket::with(['destination', 'vehicle', 'accommodation'])
+            ->where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
+
+        return [
+            'ticket_code' => $ticket->ticket_code,
+            'destination_name' => $ticket->destination?->name,
+            'vehicle_name' => $ticket->vehicle?->name,
+            'accommodation_name' => $ticket->accommodation?->name,
+            'location' => $ticket->destination?->location,
+            'expired_at' => $ticket->expired_at,
+            'guest_count' => $ticket->guest_count,
+            'total_price' => $ticket->total_price,
+            'price_breakdown' => $ticket->price_breakdown,
+            'created_at' => $ticket->created_at
+        ];
     }
 
     public function destroy($id)
-{
-    $ticket = Ticket::where('id', $id)
-        ->where('user_id', auth()->id())
-        ->firstOrFail();
+    {
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
-    $ticket->delete();
+        $ticket->delete();
 
-    return response()->json([
-        'message' => 'Ticket deleted'
-    ]);
-}
-
+        return response()->json([
+            'message' => 'Ticket deleted'
+        ]);
+    }
 }
