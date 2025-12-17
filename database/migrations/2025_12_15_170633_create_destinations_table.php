@@ -26,6 +26,7 @@ return new class extends Migration
             $table->json('facilities')->nullable();
             $table->json('imageUrls')->nullable();
             $table->text('description')->nullable();
+            $table->json('user_bookmarks')->nullable();
             $table->timestamps();
         });
     }

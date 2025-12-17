@@ -8,20 +8,19 @@ use Illuminate\Http\Request;
 
 class DestinationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $destinations = Destination::all()->map(function ($destination) {
+        $user = $request->user();
+        $destinations = Destination::all()->map(function ($destination) use ($user) {
             $destinationArray = $destination->toArray();
-
             $destinationArray['ratings'] = collect($destination->ratings ?? [])->map(function ($r) {
-                $user = \App\Models\User::find($r['user_id']);
-                $r['user_profile_photo'] = $user?->profile_photo ?? null;
+                $u = \App\Models\User::find($r['user_id']);
+                $r['user_profile_photo'] = $u?->profile_photo ?? null;
                 return $r;
             })->toArray();
-
+            $destinationArray['bookmark'] = in_array($user->id, $destination->user_bookmarks ?? []);
             return $destinationArray;
         });
-
         return response()->json(['content' => $destinations]);
     }
 
@@ -50,22 +49,25 @@ class DestinationController extends Controller
         }
 
         $validated['admin_id'] = $request->user()->id;
+        $validated['user_bookmarks'] = [];
 
         $destination = Destination::create($validated);
 
         return response()->json($destination, 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $user = $request->user();
         $destination = Destination::findOrFail($id);
 
         $destinationArray = $destination->toArray();
         $destinationArray['ratings'] = collect($destination->ratings ?? [])->map(function ($r) {
-            $user = \App\Models\User::find($r['user_id']);
-            $r['user_profile_photo'] = $user?->profile_photo ?? null;
+            $u = \App\Models\User::find($r['user_id']);
+            $r['user_profile_photo'] = $u?->profile_photo ?? null;
             return $r;
         })->toArray();
+        $destinationArray['bookmark'] = in_array($user->id, $destination->user_bookmarks ?? []);
 
         return response()->json($destinationArray);
     }
@@ -149,5 +151,22 @@ class DestinationController extends Controller
             'rating' => $destination->rating,
             'ratings' => $ratings
         ]);
+    }
+
+    public function toggleBookmark(Request $request, $id)
+    {
+        $user = $request->user();
+        $destination = Destination::findOrFail($id);
+        $bookmarks = $destination->user_bookmarks ?? [];
+
+        if (in_array($user->id, $bookmarks)) {
+            $bookmarks = array_filter($bookmarks, fn($uid) => $uid !== $user->id);
+            $destination->update(['user_bookmarks' => array_values($bookmarks)]);
+            return response()->json(['bookmark' => false]);
+        } else {
+            $bookmarks[] = $user->id;
+            $destination->update(['user_bookmarks' => $bookmarks]);
+            return response()->json(['bookmark' => true]);
+        }
     }
 }

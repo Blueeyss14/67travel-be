@@ -18,12 +18,14 @@ class Destination extends Model
         'imageUrls',
         'admin_id',
         'ratings',
-        'rating'
+        'rating',
+        'user_bookmarks'
     ];
 
     protected $casts = [
         'facilities' => 'array',
         'imageUrls' => 'array',
         'ratings' => 'array',
+        'user_bookmarks' => 'array',
     ];
 }
