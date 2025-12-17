@@ -11,6 +11,7 @@ class Accommodation extends Model
         'name',
         'latitude',
         'longitude',
-        'price'
+        'price',
+        'thumbnail',
     ];
 }

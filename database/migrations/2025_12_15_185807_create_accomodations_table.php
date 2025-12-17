@@ -15,6 +15,7 @@ return new class extends Migration
             $table->double('latitude');
             $table->double('longitude');
             $table->double('price');
+            $table->string('thumbnail')->nullable();
             $table->timestamps();
         });
     }

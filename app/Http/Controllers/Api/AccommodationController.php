@@ -22,19 +22,27 @@ class AccommodationController extends Controller
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'price' => 'required|numeric',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
+        if ($request->hasFile('thumbnail')) {
+            $validated['thumbnail'] =
+                $request->file('thumbnail')->store('accommodations', 'public');
+        }
+
         $validated['user_id'] = auth()->id();
-        return response()->json(Accommodation::create($validated), 201);
+
+        return response()->json(
+            Accommodation::create($validated),
+            201
+        );
     }
 
     public function show($id)
     {
-        $data = Accommodation::where('id', $id)
+        return Accommodation::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
-
-        return response()->json($data);
     }
 
     public function update(Request $request, $id)
@@ -43,13 +51,22 @@ class AccommodationController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $accommodation->update($request->only(['name','latitude','longitude','price']));
-        $accommodation->refresh();
-
-        return response()->json([
-            'message' => 'Accommodation updated',
-            'data' => $accommodation
+        $data = $request->validate([
+            'name' => 'sometimes|string',
+            'latitude' => 'sometimes|numeric',
+            'longitude' => 'sometimes|numeric',
+            'price' => 'sometimes|numeric',
+            'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] =
+                $request->file('thumbnail')->store('accommodations', 'public');
+        }
+
+        $accommodation->update($data);
+
+        return response()->json($accommodation);
     }
 
     public function destroy($id)

@@ -6,6 +6,8 @@ use App\Http\Controllers\Message\MessageController;
 use App\Http\Controllers\Api\DestinationController;
 use App\Http\Controllers\Api\AccommodationController;
 use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Api\TicketController;
+
 
 
 use Illuminate\Support\Facades\Route;
@@ -57,4 +59,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vehicles', [VehicleController::class, 'store']);
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/tickets', [TicketController::class, 'store']);
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/{id}', [TicketController::class, 'show']);
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
 });
