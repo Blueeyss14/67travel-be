@@ -14,9 +14,10 @@ return new class extends Migration {
             $table->id();
             $table->string('nama');
             $table->string('email')->unique();
-            $table->string('noTelpon');
+            $table->string('noTelpon')->nullable();
             $table->string('password');
             $table->string('role')->default('USER');
+            $table->string('profile_photo')->nullable();
             $table->timestamps();
         });
     }

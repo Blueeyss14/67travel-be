@@ -9,12 +9,21 @@ use Illuminate\Http\Request;
 class DestinationController extends Controller
 {
     public function index()
-{
-    return response()->json([
-        'content' => Destination::all()
-    ]);
-}
+    {
+        $destinations = Destination::all()->map(function ($destination) {
+            $destinationArray = $destination->toArray();
 
+            $destinationArray['ratings'] = collect($destination->ratings ?? [])->map(function ($r) {
+                $user = \App\Models\User::find($r['user_id']);
+                $r['user_profile_photo'] = $user?->profile_photo ?? null;
+                return $r;
+            })->toArray();
+
+            return $destinationArray;
+        });
+
+        return response()->json(['content' => $destinations]);
+    }
 
     public function store(Request $request)
     {
@@ -22,7 +31,6 @@ class DestinationController extends Controller
             'name' => 'required|string',
             'location' => 'required|string',
             'owner' => 'required|string',
-            // 'numberOfGuest' => 'integer',
             'maxOfGuest' => 'required|integer',
             'price' => 'required|numeric',
             'thumbnailUrl' => 'required|file',
@@ -45,21 +53,24 @@ class DestinationController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        return response()->json(
-            Destination::create($validated),
-            201
-        );
+        return response()->json(Destination::create($validated), 201);
     }
 
     public function show($id)
     {
-        return response()->json(
-            Destination::where('id', $id)
-                ->where('user_id', auth()->id())
-                ->firstOrFail()
-        );
-    }
+        $destination = Destination::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
+        $destinationArray = $destination->toArray();
+        $destinationArray['ratings'] = collect($destination->ratings ?? [])->map(function ($r) {
+            $user = \App\Models\User::find($r['user_id']);
+            $r['user_profile_photo'] = $user?->profile_photo ?? null;
+            return $r;
+        })->toArray();
+
+        return response()->json($destinationArray);
+    }
     //rating
     public function rate(Request $request, $id)
     {
@@ -75,15 +86,14 @@ class DestinationController extends Controller
 
         foreach ($ratings as $r) {
             if ($r['user_id'] === $user->id) {
-                return response()->json([
-                    'message' => 'User already rated'
-                ], 422);
+                return response()->json(['message' => 'User already rated'], 422);
             }
         }
 
         $ratings[] = [
             'user_id' => $user->id,
             'user_name' => $user->nama,
+            'user_profile_photo' => $user->profile_photo,
             'rate' => $request->rate,
             'description' => $request->description,
             'created_at' => now()->toDateTimeString()
@@ -113,7 +123,6 @@ class DestinationController extends Controller
             'name',
             'location',
             'owner',
-            // 'numberOfGuest',
             'maxOfGuest',
             'price',
             'description'

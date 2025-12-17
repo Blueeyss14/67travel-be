@@ -18,14 +18,20 @@ class UserAuthController extends Controller
             'noTelpon' => 'required',
             'password' => 'required|min:8',
             'confirmPassword' => 'required|same:password',
+            'profile_photo' => 'nullable|image|max:10240',
         ]);
+
+        $profilePhotoPath = $request->file('profile_photo')
+            ? $request->file('profile_photo')->store('profile_photos', 'public')
+            : null;
 
         $user = User::create([
             'nama' => $request->nama,
             'email' => $request->email,
             'noTelpon' => $request->noTelpon,
             'password' => Hash::make($request->password),
-            'role' => 'USER'
+            'role' => 'USER',
+            'profile_photo' => $profilePhotoPath,
         ]);
 
         return response()->json([
@@ -93,9 +99,15 @@ class UserAuthController extends Controller
             'noTelpon' => 'required',
             'password' => 'required',
             'confirmPassword' => 'required|same:password',
+            'profile_photo' => 'nullable|image|max:10240',
         ]);
 
         $user = User::findOrFail($id);
+
+        if ($request->hasFile('profile_photo')) {
+            $profilePhotoPath = $request->file('profile_photo')->store('profile_photos', 'public');
+            $user->profile_photo = $profilePhotoPath;
+        }
 
         $user->update([
             'nama' => $request->nama,
@@ -121,5 +133,4 @@ class UserAuthController extends Controller
             'message' => 'User deleted'
         ]);
     }
-
 }
