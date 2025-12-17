@@ -22,7 +22,7 @@ class DestinationController extends Controller
             'name' => 'required|string',
             'location' => 'required|string',
             'owner' => 'required|string',
-            'numberOfGuest' => 'required|integer',
+            // 'numberOfGuest' => 'integer',
             'maxOfGuest' => 'required|integer',
             'price' => 'required|numeric',
             'thumbnailUrl' => 'required|file',
@@ -113,7 +113,7 @@ class DestinationController extends Controller
             'name',
             'location',
             'owner',
-            'numberOfGuest',
+            // 'numberOfGuest',
             'maxOfGuest',
             'price',
             'description'

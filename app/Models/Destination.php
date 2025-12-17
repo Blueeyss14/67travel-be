@@ -11,7 +11,7 @@ class Destination extends Model
         'name',
         'location',
         'owner',
-        'numberOfGuest',
+        // 'numberOfGuest',
         'maxOfGuest',
         'rating',
         'ratings',

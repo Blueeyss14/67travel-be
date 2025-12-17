@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('location');
             $table->string('owner');
-            $table->integer('numberOfGuest');
+            // $table->integer('numberOfGuest');
             $table->integer('maxOfGuest');
             $table->double('rating')->default(0);
             $table->json('ratings')->nullable();
