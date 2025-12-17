@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class AccommodationController extends Controller
 {
-    // Semua user/admin bisa lihat semua
     public function index()
     {
         return response()->json([
@@ -35,7 +34,6 @@ class AccommodationController extends Controller
             $validated['thumbnail'] = $request->file('thumbnail')->store('accommodations', 'public');
         }
 
-        // Pake Sanctum user/admin yang login
         $validated['admin_id'] = $request->user()->id;
 
         $accommodation = Accommodation::create($validated);
