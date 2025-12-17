@@ -22,6 +22,7 @@ class MessageController extends Controller
         return Message::create([
             'userId' => $user->id,
             'userName' => $user->nama,
+            'user_profile_photo' => $user->profile_photo,
             'userMessage' => $request->userMessage,
             'adminMessage' => $request->adminMessage,
             'timestamp' => now()
@@ -30,8 +31,39 @@ class MessageController extends Controller
 
     public function getByUser($id)
     {
-        return Message::where('userId', $id)
+        $messages = Message::where('userId', $id)
             ->orderBy('id', 'desc')
             ->get();
+
+        return $messages->map(function ($m) {
+            if (!$m->user_profile_photo) {
+                $user = User::find($m->userId);
+                $m->user_profile_photo = $user?->profile_photo ?? null;
+            }
+            return $m;
+        });
     }
+
+    public function getAllUsersMessages()
+{
+    $userIds = Message::select('userId')->distinct()->pluck('userId');
+
+    $messages = [];
+
+    foreach ($userIds as $id) {
+        $userMessages = Message::where('userId', $id)
+            ->orderBy('id', 'asc')
+            ->get()
+            ->map(function ($m) {
+                if (!$m->user_profile_photo) {
+                    $user = User::find($m->userId);
+                    $m->user_profile_photo = $user?->profile_photo ?? null;
+                }
+                return $m;
+            });
+        $messages = array_merge($messages, $userMessages->toArray());
+    }
+
+    return response()->json($messages);
+}
 }

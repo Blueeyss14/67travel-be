@@ -9,6 +9,7 @@ class Message extends Model
     protected $fillable = [
         'userId',
         'userName',
+        'user_profile_photo',
         'userMessage',
         'adminMessage',
         'timestamp'

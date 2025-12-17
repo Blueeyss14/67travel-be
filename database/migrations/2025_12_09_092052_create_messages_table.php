@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('userId');
             $table->string('userName');
+            $table->string('user_profile_photo')->nullable();
             $table->text('userMessage')->nullable();
             $table->text('adminMessage')->nullable();
             $table->timestamp('timestamp')->useCurrent();
