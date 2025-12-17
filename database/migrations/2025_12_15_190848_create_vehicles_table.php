@@ -10,7 +10,9 @@ return new class extends Migration
     {
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('admin_id')->constrained('admins')->cascadeOnDelete();
+
             $table->string('name');
             $table->double('price');
             $table->integer('maxPassenger');

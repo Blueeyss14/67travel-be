@@ -39,28 +39,26 @@ class DestinationController extends Controller
         ]);
 
         if ($request->hasFile('thumbnailUrl')) {
-            $validated['thumbnailUrl'] =
-                $request->file('thumbnailUrl')->store('thumbnails', 'public');
+            $validated['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
         }
 
         $validated['imageUrls'] = [];
         if ($request->hasFile('imageUrls')) {
             foreach ($request->file('imageUrls') as $image) {
-                $validated['imageUrls'][] =
-                    $image->store('images', 'public');
+                $validated['imageUrls'][] = $image->store('images', 'public');
             }
         }
 
-        $validated['user_id'] = auth()->id();
+        $validated['admin_id'] = $request->user()->id;
 
-        return response()->json(Destination::create($validated), 201);
+        $destination = Destination::create($validated);
+
+        return response()->json($destination, 201);
     }
 
     public function show($id)
     {
-        $destination = Destination::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        $destination = Destination::findOrFail($id);
 
         $destinationArray = $destination->toArray();
         $destinationArray['ratings'] = collect($destination->ratings ?? [])->map(function ($r) {
@@ -71,7 +69,47 @@ class DestinationController extends Controller
 
         return response()->json($destinationArray);
     }
-    //rating
+
+    public function update(Request $request, $id)
+    {
+        $destination = Destination::where('id', $id)
+            ->where('admin_id', $request->user()->id)
+            ->firstOrFail();
+
+        $data = $request->only([
+            'name', 'location', 'owner', 'maxOfGuest', 'price', 'description'
+        ]);
+
+        if ($request->has('facilities')) {
+            $data['facilities'] = $request->facilities;
+        }
+
+        if ($request->hasFile('thumbnailUrl')) {
+            $data['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
+        }
+
+        if ($request->hasFile('imageUrls')) {
+            $imgs = [];
+            foreach ($request->file('imageUrls') as $image) {
+                $imgs[] = $image->store('images', 'public');
+            }
+            $data['imageUrls'] = $imgs;
+        }
+
+        $destination->update($data);
+
+        return response()->json($destination);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        Destination::where('id', $id)
+            ->where('admin_id', $request->user()->id)
+            ->delete();
+
+        return response()->json(['message' => 'deleted']);
+    }
+
     public function rate(Request $request, $id)
     {
         $request->validate([
@@ -80,7 +118,7 @@ class DestinationController extends Controller
         ]);
 
         $destination = Destination::findOrFail($id);
-        $user = auth()->user();
+        $user = $request->user();
 
         $ratings = $destination->ratings ?? [];
 
@@ -111,51 +149,5 @@ class DestinationController extends Controller
             'rating' => $destination->rating,
             'ratings' => $ratings
         ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $destination = Destination::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
-
-        $data = $request->only([
-            'name',
-            'location',
-            'owner',
-            'maxOfGuest',
-            'price',
-            'description'
-        ]);
-
-        if ($request->has('facilities')) {
-            $data['facilities'] = $request->facilities;
-        }
-
-        if ($request->hasFile('thumbnailUrl')) {
-            $data['thumbnailUrl'] =
-                $request->file('thumbnailUrl')->store('thumbnails', 'public');
-        }
-
-        if ($request->hasFile('imageUrls')) {
-            $imgs = [];
-            foreach ($request->file('imageUrls') as $image) {
-                $imgs[] = $image->store('images', 'public');
-            }
-            $data['imageUrls'] = $imgs;
-        }
-
-        $destination->update($data);
-
-        return response()->json($destination);
-    }
-
-    public function destroy($id)
-    {
-        Destination::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->delete();
-
-        return response()->json(['message' => 'deleted']);
     }
 }

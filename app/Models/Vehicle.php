@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Vehicle extends Model
 {
     protected $fillable = [
-        'user_id',
-        'name',
-        'price',
-        'maxPassenger',
-        'thumbnailUrl'
-    ];
+    'admin_id',
+    'name',
+    'price',
+    'maxPassenger',
+    'thumbnailUrl'
+];
+
 }

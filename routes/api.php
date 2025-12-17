@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/message/users', [MessageController::class, 'getAllUsersMessages']);
 });
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/destinations', [DestinationController::class, 'index']);
     Route::get('/destinations/{id}', [DestinationController::class, 'show']);
@@ -45,8 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/destinations/{id}', [DestinationController::class, 'update']);
     Route::delete('/destinations/{id}', [DestinationController::class, 'destroy']);
     Route::post('/destinations/{id}/rating', [DestinationController::class, 'rate']);
-
 });
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/accommodations', [AccommodationController::class, 'index']);
@@ -55,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/accommodations/{id}', [AccommodationController::class, 'update']);
     Route::delete('/accommodations/{id}', [AccommodationController::class, 'destroy']);
 });
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicles', [VehicleController::class, 'index']);

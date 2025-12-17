@@ -8,12 +8,17 @@ use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-public function index()
-{
-    return response()->json([
-        'content' => Vehicle::all()
-    ]);
-}
+    public function index()
+    {
+        return response()->json([
+            'content' => Vehicle::all()
+        ]);
+    }
+
+    public function show($id)
+    {
+        return Vehicle::where('id', $id)->firstOrFail();
+    }
 
     public function store(Request $request)
     {
@@ -28,24 +33,17 @@ public function index()
             $validated['thumbnailUrl'] = $request->file('thumbnailUrl')->store('uploads', 'public');
         }
 
-        $validated['user_id'] = auth()->id();
+        $validated['admin_id'] = $request->user()->id;
 
-        return response()->json(Vehicle::create($validated), 201);
-    }
+        $vehicle = Vehicle::create($validated);
 
-    public function show($id)
-    {
-        $vehicle = Vehicle::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
-
-        return response()->json($vehicle);
+        return response()->json($vehicle, 201);
     }
 
     public function update(Request $request, $id)
     {
         $vehicle = Vehicle::where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('admin_id', $request->user()->id)
             ->firstOrFail();
 
         $data = $request->only(['name','price','maxPassenger']);
@@ -63,10 +61,10 @@ public function index()
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         Vehicle::where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('admin_id', $request->user()->id)
             ->delete();
 
         return response()->json(['message' => 'deleted']);

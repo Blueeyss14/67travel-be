@@ -10,11 +10,14 @@ return new class extends Migration
     {
         Schema::create('destinations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+
+            $table->foreignId('admin_id')->constrained('admins')->cascadeOnDelete();
+
             $table->string('name');
             $table->string('location');
             $table->string('owner');
-            // $table->integer('numberOfGuest');
             $table->integer('maxOfGuest');
             $table->double('rating')->default(0);
             $table->json('ratings')->nullable();

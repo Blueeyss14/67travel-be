@@ -8,12 +8,18 @@ use Illuminate\Http\Request;
 
 class AccommodationController extends Controller
 {
-public function index()
-{
-    return response()->json([
-        'content' => Accommodation::all()
-    ]);
-}
+    // Semua user/admin bisa lihat semua
+    public function index()
+    {
+        return response()->json([
+            'content' => Accommodation::all()
+        ]);
+    }
+
+    public function show($id)
+    {
+        return Accommodation::where('id', $id)->firstOrFail();
+    }
 
     public function store(Request $request)
     {
@@ -26,29 +32,21 @@ public function index()
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] =
-                $request->file('thumbnail')->store('accommodations', 'public');
+            $validated['thumbnail'] = $request->file('thumbnail')->store('accommodations', 'public');
         }
 
-        $validated['user_id'] = auth()->id();
+        // Pake Sanctum user/admin yang login
+        $validated['admin_id'] = $request->user()->id;
 
-        return response()->json(
-            Accommodation::create($validated),
-            201
-        );
-    }
+        $accommodation = Accommodation::create($validated);
 
-    public function show($id)
-    {
-        return Accommodation::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        return response()->json($accommodation, 201);
     }
 
     public function update(Request $request, $id)
     {
         $accommodation = Accommodation::where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('admin_id', $request->user()->id)
             ->firstOrFail();
 
         $data = $request->validate([
@@ -60,8 +58,7 @@ public function index()
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] =
-                $request->file('thumbnail')->store('accommodations', 'public');
+            $data['thumbnail'] = $request->file('thumbnail')->store('accommodations', 'public');
         }
 
         $accommodation->update($data);
@@ -69,10 +66,10 @@ public function index()
         return response()->json($accommodation);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         Accommodation::where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('admin_id', $request->user()->id)
             ->delete();
 
         return response()->json(['message' => 'deleted']);

@@ -7,19 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Destination extends Model
 {
     protected $fillable = [
-        'user_id',
         'name',
         'location',
         'owner',
-        // 'numberOfGuest',
         'maxOfGuest',
-        'rating',
-        'ratings',
         'price',
         'thumbnailUrl',
         'facilities',
+        'description',
         'imageUrls',
-        'description'
+        'admin_id',
+        'ratings',
+        'rating'
     ];
 
     protected $casts = [
