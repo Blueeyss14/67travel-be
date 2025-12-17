@@ -30,71 +30,116 @@ class DestinationController extends Controller
         ]);
 
         if ($request->hasFile('thumbnailUrl')) {
-            $validated['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
+            $validated['thumbnailUrl'] =
+                $request->file('thumbnailUrl')->store('thumbnails', 'public');
         }
 
         $validated['imageUrls'] = [];
         if ($request->hasFile('imageUrls')) {
             foreach ($request->file('imageUrls') as $image) {
-                $validated['imageUrls'][] = $image->store('images', 'public');
+                $validated['imageUrls'][] =
+                    $image->store('images', 'public');
             }
         }
 
         $validated['user_id'] = auth()->id();
 
-        return response()->json(Destination::create($validated), 201);
+        return response()->json(
+            Destination::create($validated),
+            201
+        );
     }
 
     public function show($id)
     {
-        return response()->json(Destination::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail());
+        return response()->json(
+            Destination::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->firstOrFail()
+        );
     }
 
-public function update(Request $request, $id)
-{
-    $destination = Destination::where('id', $id)
-        ->where('user_id', auth()->id())
-        ->firstOrFail();
+    // ===================== RATING =====================
+    public function rate(Request $request, $id)
+    {
+        $request->validate([
+            'rate' => 'required|integer|min:1|max:5',
+            'description' => 'nullable|string'
+        ]);
 
-    $data = $request->only([
-        'name',
-        'location',
-        'owner',
-        'numberOfGuest',
-        'maxOfGuest',
-        'price',
-        'description'
-    ]);
+        $destination = Destination::findOrFail($id);
+        $user = auth()->user();
 
-    if ($request->has('facilities')) {
-        $data['facilities'] = is_array($request->facilities)
-            ? $request->facilities
-            : json_decode($request->facilities, true);
-    }
+        $ratings = $destination->ratings ?? [];
 
-    if ($request->hasFile('thumbnailUrl')) {
-        $data['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
-    }
-
-    if ($request->hasFile('imageUrls')) {
-        $images = [];
-        foreach ($request->file('imageUrls') as $image) {
-            $images[] = $image->store('images', 'public');
+        // CEGAH DOUBLE RATE
+        foreach ($ratings as $r) {
+            if ($r['user_id'] === $user->id) {
+                return response()->json([
+                    'message' => 'User already rated'
+                ], 422);
+            }
         }
-        $data['imageUrls'] = $images;
+
+        $ratings[] = [
+            'user_id' => $user->id,
+            'user_name' => $user->nama,
+            'rate' => $request->rate,
+            'description' => $request->description,
+            'created_at' => now()->toDateTimeString()
+        ];
+
+        $avg = collect($ratings)->avg('rate');
+
+        $destination->update([
+            'ratings' => $ratings,
+            'rating' => round($avg, 1)
+        ]);
+
+        return response()->json([
+            'message' => 'Rating added',
+            'rating' => $destination->rating,
+            'ratings' => $ratings
+        ]);
     }
 
-    $destination->update($data);
-    $destination->refresh();
+    public function update(Request $request, $id)
+    {
+        $destination = Destination::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
-    return response()->json([
-        'message' => 'Destination updated successfully',
-        'data' => $destination
-    ]);
-}
+        $data = $request->only([
+            'name',
+            'location',
+            'owner',
+            'numberOfGuest',
+            'maxOfGuest',
+            'price',
+            'description'
+        ]);
 
+        if ($request->has('facilities')) {
+            $data['facilities'] = $request->facilities;
+        }
+
+        if ($request->hasFile('thumbnailUrl')) {
+            $data['thumbnailUrl'] =
+                $request->file('thumbnailUrl')->store('thumbnails', 'public');
+        }
+
+        if ($request->hasFile('imageUrls')) {
+            $imgs = [];
+            foreach ($request->file('imageUrls') as $image) {
+                $imgs[] = $image->store('images', 'public');
+            }
+            $data['imageUrls'] = $imgs;
+        }
+
+        $destination->update($data);
+
+        return response()->json($destination);
+    }
 
     public function destroy($id)
     {
@@ -102,8 +147,6 @@ public function update(Request $request, $id)
             ->where('user_id', auth()->id())
             ->delete();
 
-        return response()->json([
-            'message' => 'deleted'
-        ]);
+        return response()->json(['message' => 'deleted']);
     }
 }

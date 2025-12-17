@@ -14,6 +14,7 @@ class Destination extends Model
         'numberOfGuest',
         'maxOfGuest',
         'rating',
+        'ratings',
         'price',
         'thumbnailUrl',
         'facilities',
@@ -24,5 +25,6 @@ class Destination extends Model
     protected $casts = [
         'facilities' => 'array',
         'imageUrls' => 'array',
+        'ratings' => 'array',
     ];
 }
