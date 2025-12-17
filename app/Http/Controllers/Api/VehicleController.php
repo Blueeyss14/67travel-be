@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-    public function index()
-    {
-        return response()->json([
-            'content' => Vehicle::where('user_id', auth()->id())->get()
-        ]);
-    }
+public function index()
+{
+    return response()->json([
+        'content' => Vehicle::all()
+    ]);
+}
 
     public function store(Request $request)
     {

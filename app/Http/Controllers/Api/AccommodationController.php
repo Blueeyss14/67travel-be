@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 
 class AccommodationController extends Controller
 {
-    public function index()
-    {
-        return response()->json([
-            'content' => Accommodation::where('user_id', auth()->id())->get()
-        ]);
-    }
+public function index()
+{
+    return response()->json([
+        'content' => Accommodation::all()
+    ]);
+}
 
     public function store(Request $request)
     {

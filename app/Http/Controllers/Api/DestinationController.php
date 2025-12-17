@@ -9,11 +9,12 @@ use Illuminate\Http\Request;
 class DestinationController extends Controller
 {
     public function index()
-    {
-        return response()->json([
-            'content' => Destination::where('user_id', auth()->id())->get()
-        ]);
-    }
+{
+    return response()->json([
+        'content' => Destination::all()
+    ]);
+}
+
 
     public function store(Request $request)
     {
@@ -59,7 +60,7 @@ class DestinationController extends Controller
         );
     }
 
-    // ===================== RATING =====================
+    //rating
     public function rate(Request $request, $id)
     {
         $request->validate([
@@ -72,7 +73,6 @@ class DestinationController extends Controller
 
         $ratings = $destination->ratings ?? [];
 
-        // CEGAH DOUBLE RATE
         foreach ($ratings as $r) {
             if ($r['user_id'] === $user->id) {
                 return response()->json([
