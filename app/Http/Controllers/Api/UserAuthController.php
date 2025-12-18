@@ -91,37 +91,42 @@ class UserAuthController extends Controller
         return response()->json(User::all());
     }
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'nama' => 'required',
-            'email' => 'required|email',
-            'noTelpon' => 'required',
-            'password' => 'required',
-            'confirmPassword' => 'required|same:password',
-            'profile_photo' => 'nullable|image|max:10240',
-        ]);
+public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
 
-        $user = User::findOrFail($id);
+    $request->validate([
+        'nama' => 'required',
+        'email' => 'required|email|unique:users,email,' . $user->id,
+        'noTelpon' => 'required',
+        'password' => 'nullable|min:8',
+        'confirmPassword' => 'same:password',
+        'profile_photo' => 'nullable|image|max:10240',
+    ]);
 
-        if ($request->hasFile('profile_photo')) {
-            $profilePhotoPath = $request->file('profile_photo')->store('profile_photos', 'public');
-            $user->profile_photo = $profilePhotoPath;
-        }
-
-        $user->update([
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'noTelpon' => $request->noTelpon,
-            'password' => Hash::make($request->password),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User updated',
-            'data' => $user
-        ]);
+    if ($request->hasFile('profile_photo')) {
+        $user->profile_photo = $request
+            ->file('profile_photo')
+            ->store('profile_photos', 'public');
     }
+
+    $user->nama = $request->nama;
+    $user->email = $request->email;
+    $user->noTelpon = $request->noTelpon;
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'User updated',
+        'data' => $user
+    ]);
+}
+
 
     public function delete($id)
     {
