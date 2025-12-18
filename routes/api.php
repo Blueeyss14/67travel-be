@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DestinationController;
 use App\Http\Controllers\Api\AccommodationController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\NotificationController;
 
 
 
@@ -73,4 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
     Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'notifications']);
+    Route::get('/notifications/history', [NotificationController::class, 'history']);
 });
