@@ -125,10 +125,11 @@ class DestinationController extends Controller
         $ratings = $destination->ratings ?? [];
 
         foreach ($ratings as $r) {
-            if ($r['user_id'] === $user->id) {
-                return response()->json(['message' => 'User already rated'], 422);
-            }
-        }
+            if ((int)$r['user_id'] === (int)$user->id) {
+        return response()->json(['message' => 'User already rated'], 422);
+    }
+}
+
 
         $ratings[] = [
             'user_id' => $user->id,
