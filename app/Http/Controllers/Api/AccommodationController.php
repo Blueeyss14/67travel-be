@@ -5,9 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
 use Illuminate\Http\Request;
+use Cloudinary\Cloudinary;
 
 class AccommodationController extends Controller
 {
+    protected $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+        ]);
+    }
+
     public function index()
     {
         return response()->json([
@@ -31,7 +45,11 @@ class AccommodationController extends Controller
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $request->file('thumbnail')->store('accommodations', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnail')->getRealPath(),
+                ['folder' => 'accommodations']
+            );
+            $validated['thumbnail'] = $uploaded['secure_url'];
         }
 
         $validated['admin_id'] = $request->user()->id;
@@ -56,7 +74,11 @@ class AccommodationController extends Controller
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('accommodations', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnail')->getRealPath(),
+                ['folder' => 'accommodations']
+            );
+            $data['thumbnail'] = $uploaded['secure_url'];
         }
 
         $accommodation->update($data);

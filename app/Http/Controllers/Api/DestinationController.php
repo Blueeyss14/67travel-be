@@ -5,9 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Destination;
 use Illuminate\Http\Request;
+use Cloudinary\Cloudinary;
 
 class DestinationController extends Controller
 {
+    protected Cloudinary $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+        ]);
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -38,13 +52,21 @@ class DestinationController extends Controller
         ]);
 
         if ($request->hasFile('thumbnailUrl')) {
-            $validated['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnailUrl')->getRealPath(),
+                ['folder' => 'destinations/thumbnails']
+            );
+            $validated['thumbnailUrl'] = $uploaded['secure_url'];
         }
 
         $validated['imageUrls'] = [];
         if ($request->hasFile('imageUrls')) {
             foreach ($request->file('imageUrls') as $image) {
-                $validated['imageUrls'][] = $image->store('images', 'public');
+                $uploaded = $this->cloudinary->uploadApi()->upload(
+                    $image->getRealPath(),
+                    ['folder' => 'destinations/images']
+                );
+                $validated['imageUrls'][] = $uploaded['secure_url'];
             }
         }
 
@@ -87,13 +109,21 @@ class DestinationController extends Controller
         }
 
         if ($request->hasFile('thumbnailUrl')) {
-            $data['thumbnailUrl'] = $request->file('thumbnailUrl')->store('thumbnails', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnailUrl')->getRealPath(),
+                ['folder' => 'destinations/thumbnails']
+            );
+            $data['thumbnailUrl'] = $uploaded['secure_url'];
         }
 
         if ($request->hasFile('imageUrls')) {
             $imgs = [];
             foreach ($request->file('imageUrls') as $image) {
-                $imgs[] = $image->store('images', 'public');
+                $uploaded = $this->cloudinary->uploadApi()->upload(
+                    $image->getRealPath(),
+                    ['folder' => 'destinations/images']
+                );
+                $imgs[] = $uploaded['secure_url'];
             }
             $data['imageUrls'] = $imgs;
         }
@@ -126,10 +156,9 @@ class DestinationController extends Controller
 
         foreach ($ratings as $r) {
             if ((int)$r['user_id'] === (int)$user->id) {
-        return response()->json(['message' => 'User already rated'], 422);
-    }
-}
-
+                return response()->json(['message' => 'User already rated'], 422);
+            }
+        }
 
         $ratings[] = [
             'user_id' => $user->id,

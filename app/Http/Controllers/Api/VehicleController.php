@@ -5,9 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Cloudinary\Cloudinary;
 
 class VehicleController extends Controller
 {
+    protected $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+        ]);
+    }
+
     public function index()
     {
         return response()->json([
@@ -30,7 +44,11 @@ class VehicleController extends Controller
         ]);
 
         if ($request->hasFile('thumbnailUrl')) {
-            $validated['thumbnailUrl'] = $request->file('thumbnailUrl')->store('uploads', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnailUrl')->getRealPath(),
+                ['folder' => 'vehicles']
+            );
+            $validated['thumbnailUrl'] = $uploaded['secure_url'];
         }
 
         $validated['admin_id'] = $request->user()->id;
@@ -49,7 +67,11 @@ class VehicleController extends Controller
         $data = $request->only(['name','price','maxPassenger']);
 
         if ($request->hasFile('thumbnailUrl')) {
-            $data['thumbnailUrl'] = $request->file('thumbnailUrl')->store('uploads', 'public');
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('thumbnailUrl')->getRealPath(),
+                ['folder' => 'vehicles']
+            );
+            $data['thumbnailUrl'] = $uploaded['secure_url'];
         }
 
         $vehicle->update($data);

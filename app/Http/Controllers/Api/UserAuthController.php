@@ -7,9 +7,23 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Cloudinary\Cloudinary;
 
 class UserAuthController extends Controller
 {
+    protected $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key'    => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ],
+        ]);
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -21,9 +35,14 @@ class UserAuthController extends Controller
             'profile_photo' => 'nullable|image|max:10240',
         ]);
 
-        $profilePhotoPath = $request->file('profile_photo')
-            ? $request->file('profile_photo')->store('profile_photos', 'public')
-            : null;
+        $profilePhotoUrl = null;
+        if ($request->hasFile('profile_photo')) {
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('profile_photo')->getRealPath(),
+                ['folder' => 'profile_photos']
+            );
+            $profilePhotoUrl = $uploaded['secure_url'];
+        }
 
         $user = User::create([
             'nama' => $request->nama,
@@ -31,7 +50,7 @@ class UserAuthController extends Controller
             'noTelpon' => $request->noTelpon,
             'password' => Hash::make($request->password),
             'role' => 'USER',
-            'profile_photo' => $profilePhotoPath,
+            'profile_photo' => $profilePhotoUrl,
         ]);
 
         return response()->json([
@@ -91,42 +110,43 @@ class UserAuthController extends Controller
         return response()->json(User::all());
     }
 
-public function update(Request $request, $id)
-{
-    $user = User::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
 
-    $request->validate([
-        'nama' => 'required',
-        'email' => 'required|email|unique:users,email,' . $user->id,
-        'noTelpon' => 'required',
-        'password' => 'nullable|min:8',
-        'confirmPassword' => 'same:password',
-        'profile_photo' => 'nullable|image|max:10240',
-    ]);
+        $request->validate([
+            'nama' => 'required',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'noTelpon' => 'required',
+            'password' => 'nullable|min:8',
+            'confirmPassword' => 'same:password',
+            'profile_photo' => 'nullable|image|max:10240',
+        ]);
 
-    if ($request->hasFile('profile_photo')) {
-        $user->profile_photo = $request
-            ->file('profile_photo')
-            ->store('profile_photos', 'public');
+        if ($request->hasFile('profile_photo')) {
+            $uploaded = $this->cloudinary->uploadApi()->upload(
+                $request->file('profile_photo')->getRealPath(),
+                ['folder' => 'profile_photos']
+            );
+            $user->profile_photo = $uploaded['secure_url'];
+        }
+
+        $user->nama = $request->nama;
+        $user->email = $request->email;
+        $user->noTelpon = $request->noTelpon;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated',
+            'data' => $user
+        ]);
     }
-
-    $user->nama = $request->nama;
-    $user->email = $request->email;
-    $user->noTelpon = $request->noTelpon;
-
-    if ($request->filled('password')) {
-        $user->password = Hash::make($request->password);
-    }
-
-    $user->save();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'User updated',
-        'data' => $user
-    ]);
-}
-
 
     public function delete($id)
     {
