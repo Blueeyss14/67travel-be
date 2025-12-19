@@ -1,10 +1,14 @@
 {
   "version": 2,
-  "outputDirectory": "./public",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/api/index.php"
+      "source": "/api/(.*)",
+      "destination": "/api/index.php"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.php"
     }
-  ]
+  ],
+  "outputDirectory": "./public"
 }
